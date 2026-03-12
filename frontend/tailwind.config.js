@@ -1,15 +1,17 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.js
 export default {
-    content: [
-        "./index.html",
-        "./src/**/*.{js,ts,jsx,tsx}",
-    ],
     theme: {
         extend: {
-            colors: {
-                'health-blue': '#2563eb',
+            animation: {
+                'scan': 'scan 2s linear infinite',
+                'bounce-slow': 'bounce 3s infinite',
+            },
+            keyframes: {
+                scan: {
+                    '0%': { transform: 'translateX(-100%)' },
+                    '100%': { transform: 'translateX(100%)' },
+                }
             }
         },
     },
-    plugins: [],
 }
