@@ -42,36 +42,57 @@ const HealthTips = () => {
     ];
 
     return (
-        <div className="py-20 px-6 bg-white">
+        <div className="py-12 md:py-20 px-4 md:px-6 bg-white animate-in fade-in duration-700">
             <div className="max-w-7xl mx-auto">
-                <div className="text-center mb-16">
-                    <h1 className="text-5xl font-black text-slate-900 mb-6 tracking-tight">Heart-Healthy <span className="text-blue-600">Lifestyle</span></h1>
-                    <p className="text-xl text-slate-500 max-w-2xl mx-auto font-medium">Small changes today can lead to a lifetime of better cardiovascular health. Start your journey here.</p>
+                {/* Header Section */}
+                <div className="text-center mb-10 md:mb-16">
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 md:mb-6 tracking-tight">
+                        Heart-Healthy <span className="text-blue-600">Lifestyle</span>
+                    </h1>
+                    <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto font-medium px-2">
+                        Small changes today can lead to a lifetime of better cardiovascular health. Start your journey here.
+                    </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* Grid Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                     {tips.map((tip, idx) => (
-                        <div key={idx} className={`${tip.color} p-10 rounded-[40px] border border-white shadow-sm transition-all hover:-translate-y-2 duration-300 group`}>
-                            <div className="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                        <div
+                            key={idx}
+                            className={`${tip.color} p-8 md:p-10 rounded-[30px] md:rounded-[40px] border border-white shadow-sm transition-all hover:-translate-y-2 duration-300 group`}
+                        >
+                            <div className="bg-white w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform text-2xl">
                                 {tip.icon}
                             </div>
-                            <h3 className="text-2xl font-black text-slate-800 mb-4">{tip.title}</h3>
-                            <p className="text-slate-600 leading-relaxed font-medium text-sm">{tip.desc}</p>
+                            <h3 className="text-xl md:text-2xl font-black text-slate-800 mb-3 md:mb-4">
+                                {tip.title}
+                            </h3>
+                            <p className="text-slate-600 leading-relaxed font-medium text-sm md:text-base">
+                                {tip.desc}
+                            </p>
                         </div>
                     ))}
                 </div>
 
                 {/* --- MEDICAL DISCLAIMER --- */}
-                <div className="mt-20 bg-slate-950 rounded-[40px] p-12 text-center text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px]"></div>
-                    <h2 className="text-2xl font-bold mb-4">Important Note</h2>
-                    <p className="text-slate-400 max-w-3xl mx-auto leading-relaxed italic">
-                        "The information provided here is for educational purposes only and should not be considered professional medical advice. Always consult with a doctor before making significant changes to your diet or exercise routine."
-                    </p>
+                <div className="mt-16 md:mt-24 bg-slate-950 rounded-[30px] md:rounded-[40px] p-8 md:p-16 text-center text-white relative overflow-hidden">
+                    {/* Decorative Background Glow */}
+                    <div className="absolute top-0 right-0 w-48 md:w-64 h-48 md:h-64 bg-blue-600/20 rounded-full blur-[60px] md:blur-[80px]"></div>
+                    <div className="relative z-10">
+                        <h2 className="text-xl md:text-2xl font-bold mb-4 flex items-center justify-center gap-2">
+                            <AlertCircle size={24} className="text-blue-500" /> Important Note
+                        </h2>
+                        <p className="text-slate-400 max-w-3xl mx-auto leading-relaxed italic text-sm md:text-base">
+                            "The information provided here is for educational purposes only and should not be considered professional medical advice. Always consult with a doctor before making significant changes to your diet or exercise routine."
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
+
+// Pastikan kamu mengimport AlertCircle di bagian atas jika ingin menggunakannya di disclaimer
+import { AlertCircle } from 'lucide-react';
 
 export default HealthTips;
