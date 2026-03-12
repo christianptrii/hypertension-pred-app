@@ -7,14 +7,24 @@ import HealthTips from './pages/HealthTips'
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  // 1. Scroll ke atas otomatis & tutup menu setiap kali pindah halaman
+  // 1. Efek untuk mendeteksi scroll (opsional: untuk ganti style navbar saat scroll)
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 2. Scroll ke atas otomatis & tutup menu setiap kali pindah halaman
   useEffect(() => {
     window.scrollTo(0, 0);
     setIsMenuOpen(false);
   }, [currentPage]);
 
-  // 2. Lock scroll saat menu mobile terbuka agar background tidak ikut ter-scroll
+  // 3. Lock scroll saat menu mobile terbuka
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -23,7 +33,6 @@ function App() {
     }
   }, [isMenuOpen]);
 
-  // Helper untuk styling link aktif
   const navLinkClass = (page) => `
     transition-all duration-300 font-bold uppercase tracking-[0.2em]
     ${currentPage === page
@@ -32,13 +41,21 @@ function App() {
   `;
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-600 overflow-x-hidden">
+    // Pastikan tidak ada overflow-hidden di sini agar sticky berfungsi
+    <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-600">
 
       {/* --- NAVBAR --- */}
-      <nav className="bg-white border-b border-slate-100 sticky top-0 z-[100]">
+      {/* - sticky top-0: Menempel di atas
+          - z-[100]: Memastikan di atas konten main
+          - transition-all: Biar halus saat berubah warna/shadow
+      */}
+      <nav className={`
+        fixed md:sticky top-0 w-full z-[100] transition-all duration-300
+        ${isScrolled || isMenuOpen ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-slate-100' : 'bg-white border-b border-transparent'}
+      `}>
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex justify-between items-center relative">
 
-          {/* LOGO - z-index 130 (Paling Depan) */}
+          {/* LOGO */}
           <div
             className="text-xl md:text-2xl font-black text-blue-600 cursor-pointer tracking-tighter z-[130]"
             onClick={() => setCurrentPage('home')}
@@ -57,13 +74,13 @@ function App() {
           <div className="hidden md:block">
             <button
               onClick={() => setCurrentPage('predict')}
-              className="bg-blue-600 text-white px-7 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+              className="bg-blue-600 text-white px-7 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg active:scale-95 shadow-blue-100"
             >
               Predict Now
             </button>
           </div>
 
-          {/* MOBILE HAMBURGER BUTTON - z-index 130 agar di atas overlay putih */}
+          {/* MOBILE HAMBURGER BUTTON */}
           <button
             className="md:hidden p-2 z-[130] text-slate-600 transition-transform active:scale-90 focus:outline-none"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -72,29 +89,28 @@ function App() {
           </button>
         </div>
 
-        {/* MOBILE OVERLAY MENU - SOLID WHITE COVER */}
+        {/* MOBILE OVERLAY MENU */}
         <div className={`
           fixed inset-0 bg-white z-[120] flex flex-col transition-all duration-500 ease-in-out md:hidden
           ${isMenuOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}
         `}>
-          {/* Content Wrapper - centered with top spacing */}
           <div className="flex flex-col items-center justify-center flex-grow space-y-12 px-8 pt-20">
             <div className="flex flex-col items-center space-y-10">
               <button
                 onClick={() => setCurrentPage('home')}
-                className={`text-4xl font-black tracking-tighter transition-all ${currentPage === 'home' ? 'text-blue-600' : 'text-slate-200'}`}
+                className={`text-4xl font-black tracking-tighter transition-all ${currentPage === 'home' ? 'text-blue-600 scale-110' : 'text-slate-200'}`}
               >
                 Home
               </button>
               <button
                 onClick={() => setCurrentPage('predict')}
-                className={`text-4xl font-black tracking-tighter transition-all ${currentPage === 'predict' ? 'text-blue-600' : 'text-slate-200'}`}
+                className={`text-4xl font-black tracking-tighter transition-all ${currentPage === 'predict' ? 'text-blue-600 scale-110' : 'text-slate-200'}`}
               >
                 Screening
               </button>
               <button
                 onClick={() => setCurrentPage('tips')}
-                className={`text-4xl font-black tracking-tighter transition-all ${currentPage === 'tips' ? 'text-blue-600' : 'text-slate-200'}`}
+                className={`text-4xl font-black tracking-tighter transition-all ${currentPage === 'tips' ? 'text-blue-600 scale-110' : 'text-slate-200'}`}
               >
                 Health Tips
               </button>
@@ -111,6 +127,7 @@ function App() {
       </nav>
 
       {/* --- DYNAMIC CONTENT --- */}
+      {/* Beri padding-top agar konten pertama tidak tertutup navbar fixed di mobile */}
       <main className="min-h-[70vh] animate-in fade-in duration-700">
         {currentPage === 'home' && (
           <Home onStart={() => setCurrentPage('predict')} />
@@ -128,7 +145,6 @@ function App() {
       {/* --- FOOTER --- */}
       <footer className="bg-slate-950 py-16 md:py-24 px-6 text-white mt-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-16 border-b border-slate-800 pb-12 md:pb-20 mb-12 text-center md:text-left">
-
           <div className="md:col-span-2">
             <h3 className="text-2xl font-black mb-6 text-blue-500 tracking-tighter uppercase">HYPERTENSIFY</h3>
             <p className="text-slate-400 max-w-sm mx-auto md:mx-0 leading-relaxed text-base md:text-lg font-light">
@@ -136,7 +152,6 @@ function App() {
               Designed for privacy, speed, and accuracy.
             </p>
           </div>
-
           <div>
             <h4 className="font-bold mb-6 text-xs uppercase tracking-[0.2em] text-slate-600">Explore</h4>
             <ul className="text-slate-400 space-y-4 font-medium">
@@ -145,7 +160,6 @@ function App() {
               <li className="hover:text-blue-400 cursor-pointer transition-colors" onClick={() => setCurrentPage('tips')}>Health Advice</li>
             </ul>
           </div>
-
           <div>
             <h4 className="font-bold mb-6 text-xs uppercase tracking-[0.2em] text-slate-600">Project Detail</h4>
             <p className="text-slate-500 text-sm leading-relaxed italic">
@@ -153,7 +167,6 @@ function App() {
             </p>
           </div>
         </div>
-
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-slate-600 text-[9px] md:text-[10px] tracking-[0.3em] font-black space-y-6 md:space-y-0 text-center">
           <p uppercase>© 2026 HYPERTENSIFY • OPEN SOURCE INITIATIVE</p>
           <div className="flex gap-6 italic text-slate-400 opacity-60 uppercase font-bold">
