@@ -28,24 +28,32 @@ const Home = ({ onStart }) => {
         <div className="bg-white selection:bg-blue-100 selection:text-blue-600">
             {/* --- HERO SECTION --- */}
             <section className="relative pt-12 md:pt-24 pb-20 md:pb-32 px-6 overflow-hidden">
-                {/* Background Decor - Adjusted for mobile */}
-                <div className="absolute top-[-5%] right-[-10%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-50 rounded-full blur-[80px] md:blur-[120px] -z-10 opacity-70"></div>
-                <div className="absolute bottom-0 left-[-10%] w-[250px] md:w-[500px] h-[250px] md:h-[500px] bg-red-50 rounded-full blur-[80px] md:blur-[100px] -z-10 opacity-60"></div>
+                {/* Background Decor - z-index diturunkan agar tidak menghalangi klik atau teks */}
+                <div className="absolute top-[-5%] right-[-10%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-50 rounded-full blur-[80px] md:blur-[120px] -z-10 opacity-70 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-[-10%] w-[250px] md:w-[500px] h-[250px] md:h-[500px] bg-red-50 rounded-full blur-[80px] md:blur-[100px] -z-10 opacity-60 pointer-events-none"></div>
 
-                <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-                    <div className="text-center lg:text-left relative z-10">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 md:mb-8 text-[10px] md:text-xs font-bold tracking-[0.2em] text-blue-600 uppercase bg-blue-50/50 backdrop-blur-sm border border-blue-100 rounded-2xl">
-                            <Sparkles size={14} className="animate-pulse" /> AI Health Companion
+                <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center relative z-10">
+                    {/* Konten Teks */}
+                    <div className="text-center lg:text-left relative z-20">
+                        {/* Perbaikan Badge: flex-wrap dan whitespace-normal agar tidak terpotong di mobile */}
+                        <div className="flex justify-center lg:justify-start mb-6 md:mb-8">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 text-[10px] md:text-xs font-bold tracking-[0.15em] md:tracking-[0.2em] text-blue-600 uppercase bg-blue-50/50 backdrop-blur-sm border border-blue-100 rounded-2xl animate-fade-in whitespace-normal text-center leading-tight">
+                                <Sparkles size={14} className="animate-pulse shrink-0" />
+                                <span>AI Health Companion</span>
+                            </div>
                         </div>
+
                         <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 mb-6 md:mb-8 leading-[1.1] md:leading-[0.95] tracking-tight">
-                            Your Heart <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Deserves</span> <br />
+                            Your Heart <br className="hidden md:block" />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Deserves</span> <br className="hidden md:block" />
                             to be Heard.
                         </h1>
+
                         <p className="text-lg md:text-xl text-slate-500 mb-8 md:mb-12 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
                             Don't wait for symptoms to appear. Use our intuitive AI-driven tool for a
                             private, instant, and accurate hypertension risk assessment today.
                         </p>
+
                         <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 md:gap-5">
                             <button
                                 onClick={onStart}
@@ -56,10 +64,10 @@ const Home = ({ onStart }) => {
                         </div>
                     </div>
 
-                    {/* Attractive Visual Element - Hidden on mobile, shown on large screens */}
-                    <div className="hidden lg:flex justify-end relative">
+                    {/* Visual Element - Glassmorphic Card (Hanya muncul di desktop) */}
+                    <div className="hidden lg:flex justify-end relative z-20">
                         <div className="relative group">
-                            <div className="bg-white/40 backdrop-blur-xl p-10 rounded-[45px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white/60 w-[400px] aspect-square relative z-20 flex flex-col justify-between overflow-hidden">
+                            <div className="bg-white/40 backdrop-blur-xl p-10 rounded-[45px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-white/60 w-[400px] aspect-square relative z-30 flex flex-col justify-between overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full blur-2xl -z-10 opacity-50"></div>
 
                                 <div className="flex items-center justify-between mb-2">
@@ -93,13 +101,10 @@ const Home = ({ onStart }) => {
                                     <MetricIcon icon={<Scale size={18} />} label="METRICS" />
                                 </div>
                             </div>
-                            <div className="absolute -bottom-8 -right-8 bg-white p-6 rounded-3xl shadow-2xl border border-slate-50 z-30 flex items-center gap-4 animate-bounce-slow">
-                                <div className="p-3 bg-green-100 rounded-2xl text-green-600 font-black text-xl">92%</div>
-                                <div className="pr-2">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Detection</p>
-                                    <p className="text-xs font-bold text-slate-700 uppercase">Accuracy</p>
-                                </div>
-                            </div>
+
+                            {/* Floating Ornaments */}
+                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-100 rounded-[30%] rotate-12 z-20 opacity-40 animate-pulse"></div>
+                            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-pink-100 rounded-full z-20 mix-blend-multiply filter blur-2xl opacity-40"></div>
                         </div>
                     </div>
                 </div>
