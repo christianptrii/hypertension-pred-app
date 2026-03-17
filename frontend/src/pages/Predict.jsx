@@ -194,10 +194,6 @@ const Predict = () => {
                                         </div>
                                     </div>
 
-                                    <div className={`py-3 px-6 rounded-2xl mb-8 text-center font-black text-xl uppercase tracking-tighter ${result === 'High Risk' ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-green-500/20 text-green-500 border border-green-500/30'}`}>
-                                        {result}
-                                    </div>
-
                                     {/* DYNAMIC FACTORS */}
                                     <div className="space-y-5 mb-6">
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
