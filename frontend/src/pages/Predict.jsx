@@ -40,7 +40,6 @@ const Predict = () => {
         setResult(null);
 
         try {
-            // Kita kirim formData asli + nilai BMI yang sudah dihitung
             const payload = { ...formData, bmi: bmi };
 
             const response = await fetch('http://127.0.0.1:5000/predict', {
@@ -58,11 +57,10 @@ const Predict = () => {
             const data = await response.json();
 
             if (data.status === 'success') {
-                setResult(data.result);           // 'High Risk' atau 'Low Risk'
-                setProbability(data.probability); // Angka 0-100
-                setFactors(data.factors);         // Insight dari AI
+                setResult(data.result);
+                setProbability(data.probability);
+                setFactors(data.factors);
 
-                // Auto-scroll ke hasil di Mobile
                 if (window.innerWidth < 1024) {
                     setTimeout(() => {
                         document.getElementById('result-card')?.scrollIntoView({ behavior: 'smooth' });
@@ -83,7 +81,6 @@ const Predict = () => {
     // FUNGSI EXPORT PDF
     const downloadPDF = () => {
         const element = reportRef.current;
-        // Kita gunakan scale: 2 untuk hasil print yang tajam/HD
         html2canvas(element, { scale: 2, backgroundColor: '#0f172a' }).then((canvas) => {
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
@@ -177,7 +174,7 @@ const Predict = () => {
                         </form>
                     </div>
 
-                    {/* --- RIGHT: ANALYSIS RESULT & EXPORT --- */}
+                    {/* --- RIGHT: ANALYSIS RESULT --- */}
                     <div className="w-full lg:flex-1 space-y-6">
                         <div id="result-card" ref={reportRef} className="bg-slate-900 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden min-h-[400px]">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 rounded-full blur-3xl"></div>
@@ -196,7 +193,8 @@ const Predict = () => {
                                 </div>
                             ) : (
                                 <div className="animate-in zoom-in duration-500 relative z-10">
-                                    <div className="relative w-40 h-40 mb-8 mx-auto flex items-center justify-center">
+                                    {/* PROBABILITY GAUGE */}
+                                    <div className="relative w-40 h-40 mb-12 mx-auto flex items-center justify-center">
                                         <svg className="w-full h-full transform -rotate-90">
                                             <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-white/5" />
                                             <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent"
@@ -212,10 +210,7 @@ const Predict = () => {
                                         </div>
                                     </div>
 
-                                    <div className={`py-3 px-6 rounded-2xl mb-8 text-center font-black text-xl uppercase tracking-tighter border ${result === 'High Risk' ? 'bg-red-500/10 text-red-500 border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]' : 'bg-green-500/10 text-green-500 border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]'}`}>
-                                        {result}
-                                    </div>
-
+                                    {/* DYNAMIC FACTORS - Key Insights Only */}
                                     <div className="space-y-5 mb-6">
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                             <Info size={12} /> Key Contributing Factors
