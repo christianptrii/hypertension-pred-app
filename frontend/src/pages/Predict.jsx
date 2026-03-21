@@ -41,7 +41,7 @@ const Predict = () => {
         try {
             // Mengirim payload lengkap (formData + bmi) ke Flask
             const payload = { ...formData, bmi: bmi };
-            const response = await fetch('https://hypertension-backend-xyz.vercel.app/predict', {
+            const response = await fetch('https://hypertension-pred-app.vercel.app/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
