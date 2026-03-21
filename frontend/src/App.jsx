@@ -55,7 +55,7 @@ function App() {
             className="text-xl md:text-2xl font-black text-blue-600 cursor-pointer tracking-tighter z-[130]"
             onClick={() => setCurrentPage('home')}
           >
-            HYPERTENSIFY<span className="text-slate-400 text-[10px] md:text-xs ml-1 font-medium tracking-normal">v1.0</span>
+            HYPERTENSIFY<span className="text-slate-400 text-[10px] md:text-xs ml-1 font-medium tracking-normal"></span>
           </div>
 
           {/* DESKTOP MENU */}
