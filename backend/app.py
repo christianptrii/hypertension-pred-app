@@ -5,7 +5,7 @@ import pandas as pd
 import os
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # --- LOAD MODEL ---
 model_path = os.path.join('models', 'model_rf_pso.pkl')
