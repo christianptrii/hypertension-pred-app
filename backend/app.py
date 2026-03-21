@@ -5,11 +5,14 @@ import pandas as pd
 import os
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+# Gunakan konfigurasi CORS yang lebih spesifik untuk menangani preflight request
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
-# --- LOAD MODEL ---
-model_path = os.path.join('models', 'model_rf_pso.pkl')
+# --- LOAD MODEL (Gunakan Path Absolut agar aman di Vercel) ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(BASE_DIR, 'models', 'model_rf_pso.pkl')
 
+model = None
 try:
     with open(model_path, 'rb') as f:
         model = pickle.load(f)
@@ -17,20 +20,28 @@ try:
 except Exception as e:
     print(f"❌ Gagal Memuat Model: {str(e)}")
 
-@app.route('/predict', methods=['POST'])
+# Rute utama agar tidak muncul "Not Found" saat dibuka di browser
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({"status": "online", "message": "Hypertension Prediction API is running"})
+
+@app.route('/predict', methods=['POST', 'OPTIONS'])
 def predict():
+    # Tangani Preflight Request secara eksplisit
+    if request.method == 'OPTIONS':
+        response = app.make_default_options_response()
+        return response
+        
     try:
         data = request.json
-        print("--- Data Masuk dari React ---")
-        print(data)
+        if not data:
+            return jsonify({'status': 'error', 'message': 'No data provided'}), 400
 
-        # 1. Mapping Kategori ke Angka (Sesuaikan dengan LabelEncoder di Notebook)
-        # Jika di notebook Male = 1, Female = 0
+        # 1. Mapping Kategori ke Angka
         jk_val = 1 if data.get('gender') == 'Male' else 0
-        # Jika di notebook Merokok: Ya = 1, Tidak = 0 (Sesuaikan stringnya)
         merokok_val = 1 if data.get('smoking') == 'Yes' else 0
         
-        # 2. Ambil nilai numerik dari React
+        # 2. Ambil nilai numerik
         umur = float(data.get('age', 0))
         tinggi = float(data.get('height', 0))
         berat = float(data.get('weight', 0))
@@ -38,8 +49,7 @@ def predict():
         sistole = float(data.get('systole', 0))
         diastole = float(data.get('diastole', 0))
 
-        # 3. Susun ke dalam DataFrame dengan Nama Kolom ASLI dari Notebook
-        # Urutan HARUS sama dengan list yang kamu berikan tadi
+        # 3. Susun ke dalam DataFrame
         column_names = [
             'Jenis Kelamin', 'Umur Tahun', 'Merokok', 
             'Tinggi', 'Berat Badan', 'Hasil IMT', 
@@ -50,31 +60,32 @@ def predict():
         input_df = pd.DataFrame(input_data, columns=column_names)
 
         # 4. Prediksi
+        if model is None:
+            return jsonify({'status': 'error', 'message': 'Model not loaded'}), 500
+
         prediction = model.predict(input_df)[0]
         probabilities = model.predict_proba(input_df)[0]
         
         # Ambil probabilitas High Risk (Kelas 1)
         high_risk_prob = round(probabilities[1] * 100, 2)
 
-        print(f"Hasil: {prediction}, Probabilitas: {high_risk_prob}%")
-
         return jsonify({
             'status': 'success',
             'result': 'High Risk' if prediction == 1 else 'Low Risk',
             'probability': high_risk_prob,
             'factors': [
-                {'name': 'Tekanan Darah (Sistole)', 'weight': int(sistole / 2.5)},
-                {'name': 'Indeks Massa Tubuh (IMT)', 'weight': int(imt * 2)},
-                {'name': 'Faktor Usia', 'weight': int(umur / 1.5)}
+                {'name': 'Tekanan Darah (Sistole)', 'weight': min(100, int(sistole / 2.5))},
+                {'name': 'Indeks Massa Tubuh (IMT)', 'weight': min(100, int(imt * 2))},
+                {'name': 'Faktor Usia', 'weight': min(100, int(umur / 1.5))}
             ]
         })
 
     except Exception as e:
-        print(f"⚠️ ERROR DETAIL: {str(e)}")
         return jsonify({
             'status': 'error', 
             'message': str(e)
         }), 400
 
+# Penting untuk Vercel: pastikan ada objek 'app' yang bisa di-import
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
