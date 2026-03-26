@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     Activity, HeartPulse, BrainCircuit, Loader2,
-    AlertCircle, Info, FileDown
+    AlertCircle, Info, FileDown, CheckCircle2, ArrowDown
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -19,7 +19,6 @@ const Predict = () => {
 
     const [bmi, setBmi] = useState(0);
 
-    // Auto BMI Calculation
     useEffect(() => {
         if (formData.height > 0 && formData.weight > 0) {
             const hMeter = formData.height / 100;
@@ -32,14 +31,26 @@ const Predict = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // --- INTEGRASI REAL KE BACKEND FLASK ---
+    const getDynamicInsight = () => {
+        if (!factors || factors.length === 0) return "Analyzing your clinical profile...";
+        const topFactor = [...factors].sort((a, b) => b.weight - a.weight)[0];
+
+        const narrations = {
+            'Blood Pressure (Sys/Dia)': "Your blood pressure levels are the primary risk factors. The AI detected high pressure against your artery walls, requiring careful monitoring.",
+            'BMI Analysis': "Your Body Mass Index (BMI) is a dominant contributor. Maintaining a healthy weight range is essential to reducing cardiac workload.",
+            'Age Factor': "Age is a significant contributor in this analysis. Natural changes in vascular elasticity over time are influencing your risk profile.",
+            'Smoking Status': "Smoking status is identified as a high-impact trigger. Chemical exposure from tobacco significantly narrows and stiffens blood vessels."
+        };
+
+        return narrations[topFactor.name] || `The ${topFactor.name} variable is currently the most significant factor affecting your health risk assessment.`;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setResult(null);
 
         try {
-            // Mengirim payload lengkap (formData + bmi) ke Flask
             const payload = { ...formData, bmi: bmi };
             const response = await fetch('https://hypertension-pred-app.vercel.app/predict', {
                 method: 'POST',
@@ -48,44 +59,72 @@ const Predict = () => {
             });
 
             if (!response.ok) throw new Error('Server connection failed');
-
             const data = await response.json();
+
             if (data.status === 'success') {
+                const translatedFactors = data.factors.map(f => {
+                    const label = f.name.toUpperCase();
+                    if (label.includes('TEKANAN DARAH') || label.includes('SISTOLE')) {
+                        return { ...f, name: 'Blood Pressure (Sys/Dia)' };
+                    }
+                    if (label.includes('INDEKS MASSA TUBUH') || label.includes('IMT')) {
+                        return { ...f, name: 'BMI Analysis' };
+                    }
+                    if (label.includes('FAKTOR USIA') || label.includes('UMUR')) {
+                        return { ...f, name: 'Age Factor' };
+                    }
+                    if (label.includes('MEROKOK') || label.includes('SMOKING')) {
+                        return { ...f, name: 'Smoking Status' };
+                    }
+                    return f;
+                });
+
                 setResult(data.result);
                 setProbability(data.probability);
-                setFactors(data.factors);
-                // Auto-scroll ke area hasil di Mobile
-                if (window.innerWidth < 1024) {
-                    setTimeout(() => {
-                        document.getElementById('result-card')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 150);
-                }
-            } else {
-                alert("Error: " + data.message);
+                setFactors(translatedFactors);
+
+                setTimeout(() => {
+                    document.getElementById('result-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 300);
             }
         } catch (error) {
             console.error("API Error:", error);
-            alert("Gagal terhubung ke AI Server. Pastikan Flask sudah dijalankan.");
+            alert("Failed to connect to the AI Server.");
         } finally {
             setLoading(false);
         }
     };
 
-    // --- FUNGSI EXPORT PDF (FIX OKLCH ERROR DENGAN HEX) ---
+    // --- FIX UTAMA: MENGHINDARI ERROR OKLAB DENGAN ONCLONE ---
     const downloadPDF = async () => {
         const element = reportRef.current;
         if (!element) return;
-
         setLoading(true);
+
         try {
-            // Beri jeda 300ms agar UI stabil sempurna
-            await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             const canvas = await html2canvas(element, {
-                scale: 2, // Kualitas HD
-                backgroundColor: '#0f172a', // Gunakan HEX manual
+                scale: 2,
+                backgroundColor: '#0f172a',
                 useCORS: true,
                 logging: false,
+                // ONCLONE: Membersihkan semua elemen dari warna modern sebelum di-capture
+                onclone: (clonedDoc) => {
+                    const el = clonedDoc.getElementById('result-card');
+                    if (el) {
+                        // Paksa semua elemen di dalam salinan menggunakan HEX standar
+                        const allElements = el.getElementsByTagName("*");
+                        for (let i = 0; i < allElements.length; i++) {
+                            const style = window.getComputedStyle(allElements[i]);
+                            // Jika warna mengandung 'okl', ganti ke warna aman
+                            if (style.color.includes('okl')) allElements[i].style.color = '#ffffff';
+                            if (style.backgroundColor.includes('okl')) allElements[i].style.backgroundColor = 'transparent';
+                        }
+                        el.style.backgroundColor = '#0f172a';
+                        el.style.color = '#ffffff';
+                    }
+                }
             });
 
             const imgData = canvas.toDataURL('image/png');
@@ -93,194 +132,178 @@ const Predict = () => {
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-            // Menambahkan margin atas 10mm
             pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
             pdf.save(`Hypertensify_Report_${formData.age || 'Patient'}.pdf`);
         } catch (error) {
-            console.error("Gagal export PDF:", error);
-            alert("Terjadi kesalahan saat membuat PDF. Pastikan library terinstal.");
+            console.error("PDF Export Failed:", error);
+            alert("Export failed. Please try again or use a different browser.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="py-8 md:py-16 px-4 md:px-6 bg-slate-50 min-h-screen">
-            <div className="max-w-6xl mx-auto">
-                <div className="flex flex-col lg:flex-row gap-8 md:gap-12 items-start">
+        <div className="py-8 md:py-12 px-4 md:px-6 bg-slate-50 min-h-screen font-sans text-slate-900">
+            <div className="max-w-4xl mx-auto space-y-12">
 
-                    {/* --- KIRI: FORM --- */}
-                    <div className="w-full lg:flex-[1.5] bg-white p-6 md:p-10 rounded-[40px] shadow-xl border border-slate-100 relative overflow-hidden">
-                        <div className="hidden lg:flex items-center gap-4 mb-10">
-                            <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-200">
-                                <Activity size={24} />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-black text-slate-800">Medical Data</h2>
-                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Enter parameters for Random Forest analysis</p>
-                            </div>
+                {/* --- STEP 1: FORM --- */}
+                <section className="space-y-6">
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg">
+                            <Activity size={24} />
                         </div>
+                        <div>
+                            <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Step 1: Clinical Data</h2>
+                            <p className="text-xs md:text-sm text-slate-500 font-medium">Input clinical parameters for Random Forest PSO analysis</p>
+                        </div>
+                    </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
+                    <div className="bg-white p-6 md:p-10 rounded-[30px] md:rounded-[40px] shadow-xl border border-slate-100">
+                        <form onSubmit={handleSubmit} className="space-y-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Gender</label>
-                                    <select name="gender" required onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium appearance-none">
+                                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Gender</label>
+                                    <select name="gender" required onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 appearance-none cursor-pointer">
                                         <option value="">Select Gender</option>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Age (Years)</label>
-                                    <input type="number" name="age" placeholder="Ex: 45" required onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" />
+                                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Age (Years)</label>
+                                    <input type="number" name="age" placeholder="e.g. 45" required onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Height (cm)</label>
-                                    <input type="number" name="height" placeholder="170" required onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" />
+                                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Height (cm)</label>
+                                    <input type="number" name="height" placeholder="170" required onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Weight (kg)</label>
-                                    <input type="number" name="weight" placeholder="70" required onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" />
+                                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Weight (kg)</label>
+                                    <input type="number" name="weight" placeholder="70" required onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" />
                                 </div>
                                 <div className="space-y-2 col-span-2 md:col-span-1">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Result BMI</label>
-                                    <div className="w-full p-4 bg-blue-50/50 border border-blue-100 rounded-2xl font-black text-blue-600 flex items-center justify-center text-xl">
+                                    <label className="text-xs font-black text-blue-500 uppercase tracking-widest ml-1">Auto BMI Score</label>
+                                    <div className="w-full p-4 bg-blue-50 border border-blue-200 rounded-2xl font-black text-blue-600 flex items-center justify-center text-xl shadow-inner">
                                         {bmi > 0 ? bmi : '--'}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-50">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-slate-100">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Smoking</label>
-                                    <select name="smoking" required onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none appearance-none cursor-pointer">
-                                        <option value="">Status</option>
+                                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Smoking Status</label>
+                                    <select name="smoking" required onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold cursor-pointer">
+                                        <option value="">Select Status</option>
                                         <option value="Yes">Yes</option>
                                         <option value="No">No</option>
                                     </select>
                                 </div>
-                                <div className="space-y-2 text-red-600">
-                                    <label className="text-xs font-bold uppercase tracking-wider ml-1">Systole</label>
-                                    <input type="number" name="systole" placeholder="120" required onChange={handleInputChange} className="w-full p-4 bg-red-50/30 border border-red-100 rounded-2xl outline-none focus:ring-2 focus:ring-red-500 transition-all" />
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-red-500 uppercase tracking-widest ml-1">Systole (mmHg)</label>
+                                    <input type="number" name="systole" placeholder="120" required onChange={handleInputChange} className="w-full p-4 bg-red-50/30 border border-red-100 rounded-2xl outline-none font-bold text-red-700" />
                                 </div>
-                                <div className="space-y-2 text-red-600">
-                                    <label className="text-xs font-bold uppercase tracking-wider ml-1">Diastole</label>
-                                    <input type="number" name="diastole" placeholder="80" required onChange={handleInputChange} className="w-full p-4 bg-red-50/30 border border-red-100 rounded-2xl outline-none focus:ring-2 focus:ring-red-500 transition-all" />
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-red-500 uppercase tracking-widest ml-1">Diastole (mmHg)</label>
+                                    <input type="number" name="diastole" placeholder="80" required onChange={handleInputChange} className="w-full p-4 bg-red-50/30 border border-red-100 rounded-2xl outline-none font-bold text-red-700" />
                                 </div>
                             </div>
 
-                            <button type="submit" disabled={loading} className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black text-lg flex justify-center items-center gap-3 active:scale-95 transition-all disabled:opacity-50 shadow-xl shadow-blue-200">
-                                {loading ? <><Loader2 className="animate-spin" /> Analyzing...</> : <><BrainCircuit size={24} /> Get AI Prediction</>}
+                            <button type="submit" disabled={loading} className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black text-xl flex justify-center items-center gap-4 active:scale-95 transition-all shadow-xl">
+                                {loading ? <><Loader2 className="animate-spin" /> Analyzing...</> : <><BrainCircuit size={28} /> Get AI Prediction</>}
                             </button>
                         </form>
                     </div>
+                </section>
 
-                    {/* --- KANAN: HASIL (FIXED FOR PDF ERROR) --- */}
-                    <div className="w-full lg:flex-1 space-y-6">
-                        {/* GUNAKAN INLINE STYLE BACKGROUND HEX UNTUK MENGHINDARI OKLCH ERROR */}
-                        <div
-                            id="result-card"
-                            ref={reportRef}
-                            style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
-                            className="p-8 rounded-[40px] shadow-2xl relative overflow-hidden min-h-[420px] flex flex-col"
-                        >
-                            <h3 style={{ color: '#60a5fa' }} className="text-lg font-bold mb-8 flex items-center gap-2 uppercase tracking-widest relative z-10">
-                                <HeartPulse size={20} /> Analysis Result
-                            </h3>
+                {/* --- STEP 2: RESULT --- */}
+                <div id="result-section" className={`space-y-6 transition-all duration-1000 ${result ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 h-0 overflow-hidden'}`}>
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="p-3 bg-emerald-500 rounded-2xl text-white shadow-lg">
+                            <CheckCircle2 size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Step 2: AI Analysis Result</h2>
+                            <p className="text-xs md:text-sm text-slate-500 font-medium">Based on the Hypertensify PSO-RF intelligent engine</p>
+                        </div>
+                    </div>
 
-                            {!result ? (
-                                <div className="flex-grow flex flex-col items-center justify-center text-center space-y-4 opacity-50 relative z-10">
-                                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-2 border border-white/10">
-                                        <Info style={{ color: '#64748b' }} />
-                                    </div>
-                                    <p style={{ color: '#94a3b8' }} className="text-sm font-medium leading-relaxed max-w-[200px]">
-                                        Please submit your data to see the AI analysis results.
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="animate-in zoom-in duration-500 relative z-10 flex-grow">
-                                    {/* PROBABILITY GAUGE */}
-                                    <div className="relative w-40 h-40 mb-10 mx-auto flex items-center justify-center">
-                                        <svg className="w-full h-full transform -rotate-90">
-                                            <circle cx="80" cy="80" r="70" stroke="rgba(255,255,255,0.05)" strokeWidth="12" fill="transparent" />
-                                            <circle cx="80" cy="80" r="70"
-                                                stroke={probability > 50 ? '#ef4444' : '#22c55e'} // HEX manual
-                                                strokeWidth="12" fill="transparent"
-                                                strokeDasharray={440}
-                                                strokeDashoffset={440 - (440 * probability) / 100}
+                    <div className="flex flex-col lg:flex-row gap-6 items-start">
+                        <div className="w-full lg:flex-[3]">
+                            {/* Card Utama - Paksa Inline Color */}
+                            <div id="result-card" ref={reportRef} style={{ backgroundColor: '#0f172a', color: '#ffffff' }} className="p-6 md:p-12 rounded-[30px] md:rounded-[40px] shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px]"></div>
+                                <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 relative z-10">
+
+                                    {/* Lingkaran */}
+                                    <div className="relative flex items-center justify-center w-40 h-40 md:w-48 md:h-48 flex-shrink-0 mx-auto">
+                                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 192 192">
+                                            <circle cx="96" cy="96" r="85" stroke="#1e293b" strokeWidth="14" fill="transparent" />
+                                            <circle cx="96" cy="96" r="85"
+                                                stroke={probability > 50 ? '#ef4444' : '#10b981'}
+                                                strokeWidth="16" fill="transparent"
+                                                strokeDasharray={534}
+                                                strokeDashoffset={534 - (534 * probability) / 100}
                                                 strokeLinecap="round"
+                                                className="transition-all duration-1000 ease-out"
                                             />
                                         </svg>
-                                        <div className="absolute flex flex-col items-center">
-                                            <span style={{ color: '#ffffff' }} className="text-4xl font-black">{probability}%</span>
-                                            <span style={{ color: '#64748b' }} className="text-[9px] font-bold uppercase tracking-widest mt-1">Risk Level</span>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
+                                            <span className="font-black italic text-white whitespace-nowrap leading-none tracking-tighter" style={{ fontSize: probability >= 100 ? '2.4rem' : '2.8rem' }}>
+                                                {probability}%
+                                            </span>
+                                            <span style={{ color: '#64748b' }} className="text-[10px] font-bold uppercase tracking-widest mt-2">Risk Prob</span>
                                         </div>
                                     </div>
 
-                                    {/* KEY FACTORS */}
-                                    <div className="space-y-5 mb-6">
-                                        <p style={{ color: '#94a3b8' }} className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                            <Info size={12} /> Key Contributing Factors
-                                        </p>
+                                    {/* Teks */}
+                                    <div className="flex-grow w-full space-y-6">
+                                        <div className="space-y-3">
+                                            <h3 style={{ color: '#60a5fa' }} className="text-sm font-black uppercase tracking-[0.2em]">Key Insights</h3>
+                                            <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed">
+                                                Based on the Random Forest algorithm optimized with PSO, <span className="text-white">{getDynamicInsight()}</span>
+                                            </p>
+                                        </div>
                                         <div className="space-y-4">
                                             {factors.map((f, i) => (
                                                 <div key={i} className="space-y-2">
-                                                    <div className="flex justify-between text-[11px] font-bold uppercase">
-                                                        <span style={{ color: '#cbd5e1' }}>{f.name}</span>
-                                                        <span style={{ color: '#60a5fa' }}>{f.weight}%</span>
+                                                    <div className="flex justify-between text-[10px] font-black uppercase tracking-tight">
+                                                        <span style={{ color: '#94a3b8' }}>{f.name}</span>
+                                                        <span style={{ color: '#60a5fa' }}>{f.weight}% Influence</span>
                                                     </div>
-                                                    <div style={{ backgroundColor: 'rgba(255,255,255,0.05)' }} className="h-1.5 rounded-full overflow-hidden no-export">
-                                                        <div style={{ width: `${f.weight}%`, backgroundColor: '#2563eb' }} className="h-full rounded-full transition-all duration-1000"></div>
+                                                    <div style={{ backgroundColor: '#1e293b' }} className="h-1.5 rounded-full overflow-hidden">
+                                                        <div style={{ width: `${f.weight}%`, backgroundColor: '#3b82f6' }} className="h-full rounded-full transition-all duration-1000"></div>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
-                            )}
+                            </div>
                         </div>
 
-                        {/* EXPORT BUTTON */}
-                        {result && (
-                            <button
-                                onClick={downloadPDF}
-                                disabled={loading}
-                                className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-95 shadow-lg disabled:opacity-50"
-                            >
-                                <FileDown size={20} /> Download Medical Report (PDF)
+                        <div className="w-full lg:flex-1 space-y-4">
+                            <button onClick={downloadPDF} disabled={loading} className="w-full py-6 bg-slate-900 hover:bg-slate-800 text-white rounded-3xl font-black text-sm flex flex-col items-center justify-center gap-2 transition-all active:scale-95 shadow-xl">
+                                <FileDown size={28} /> Download Report
                             </button>
-                        )}
-
-                        {/* --- GUIDE CARD --- */}
-                        <div className="bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border border-slate-100 shadow-sm mt-6">
-                            <h4 className="text-slate-800 text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2">
-                                <AlertCircle size={16} className="text-blue-500" /> Patient Guide
-                            </h4>
-                            <ul className="space-y-3 text-[11px] font-bold text-slate-400 uppercase tracking-tight">
-                                <li className="flex items-center gap-3">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                    Pastikan Anda dalam kondisi istirahat (rileks) 5-10 menit sebelum input data.
-                                </li>
-                                <li className="flex items-center gap-3">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                    Gunakan alat pengukur tekanan darah (tensimeter) digital yang sudah terkalibrasi.
-                                </li>
-                                <li className="flex items-center gap-3">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                    Hindari konsumsi kafein atau merokok 30 menit sebelum melakukan pengecekan.
-                                </li>
-                                <li className="flex items-center gap-3">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                    Hasil AI ini adalah skrining awal, silakan konsultasi ke dokter untuk diagnosa medis.
-                                </li>
-                            </ul>
+                            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                                <h4 className="text-slate-800 text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2"><AlertCircle size={14} className="text-blue-500" /> Medical Disclaimer</h4>
+                                <ul className="space-y-4 text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                                    <li className="flex gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 shrink-0" />This result is an initial AI-based screening.</li>
+                                    <li className="flex gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 shrink-0" />Consult a physician immediately if high risk is detected.</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                {!result && !loading && (
+                    <div className="py-10 text-center text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] flex flex-col items-center gap-3">
+                        <ArrowDown className="animate-bounce" /> Please complete the medical form above
+                    </div>
+                )}
             </div>
         </div>
     );
