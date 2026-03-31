@@ -50,8 +50,9 @@ const Home = ({ onStart }) => {
                         </h1>
 
                         <p className="text-lg md:text-xl text-slate-500 mb-8 md:mb-12 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
-                            Don't wait for symptoms to appear. Use our intuitive AI-driven tool for a
-                            private, instant, and accurate hypertension risk assessment today.
+                            Take control of your heart health with AI. Our system uses advanced
+                            <span className="text-blue-600 font-bold"> Random Forest and PSO </span>
+                            to transform your clinical data into instant, private, and accurate hypertension risk insights.
                         </p>
 
                         <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 md:gap-5">
