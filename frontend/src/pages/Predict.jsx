@@ -42,7 +42,7 @@ const Predict = () => {
             'Smoking Status': "Smoking status is identified as a high-impact trigger. Chemical exposure from tobacco significantly narrows and stiffens blood vessels."
         };
 
-        return narrations[topFactor.name] || `The ${topFactor.name} variable is the most significant factor affecting your health risk assessment.`;
+        return narrations[topFactor.name] || `The ${topFactor.name} variable is currently the most significant factor affecting your health risk assessment.`;
     };
 
     const handleSubmit = async (e) => {
@@ -95,45 +95,70 @@ const Predict = () => {
         }
     };
 
+    // --- LOGIKA PDF TERUPDATE (STRATEGI ANTI-OKLAB) ---
     const downloadPDF = async () => {
         const element = reportRef.current;
         if (!element) return;
         setLoading(true);
+
         try {
             await new Promise(resolve => setTimeout(resolve, 500));
+
             const canvas = await html2canvas(element, {
                 scale: 2,
                 backgroundColor: '#0f172a',
                 useCORS: true,
+                allowTaint: true,
                 logging: false,
                 onclone: (clonedDoc) => {
                     const el = clonedDoc.getElementById('result-card');
                     if (el) {
-                        const allElements = el.getElementsByTagName("*");
-                        for (let i = 0; i < allElements.length; i++) {
-                            const style = window.getComputedStyle(allElements[i]);
-                            if (style.color.includes('okl')) allElements[i].style.color = '#ffffff';
-                            if (style.backgroundColor.includes('okl')) allElements[i].style.backgroundColor = 'transparent';
-                        }
+                        // 1. Force main container styles
                         el.style.backgroundColor = '#0f172a';
                         el.style.color = '#ffffff';
+
+                        // 2. Brutal cleaning: ganti semua warna dinamis ke HEX statis
+                        const allElements = el.getElementsByTagName("*");
+                        for (let i = 0; i < allElements.length; i++) {
+                            const node = allElements[i];
+                            const computed = window.getComputedStyle(node);
+
+                            // Deteksi warna oklab/oklch yang bikin crash
+                            if (computed.color.includes('okl')) {
+                                node.style.color = '#ffffff';
+                            }
+                            if (computed.backgroundColor.includes('okl')) {
+                                // Jika ini bar progres, gunakan warna biru hex
+                                if (node.className.includes('h-full')) {
+                                    node.style.backgroundColor = '#3b82f6';
+                                } else {
+                                    node.style.backgroundColor = 'transparent';
+                                }
+                            }
+                            // Bersihkan border juga jika ada
+                            if (computed.borderColor.includes('okl')) {
+                                node.style.borderColor = '#1e293b';
+                            }
+                        }
                     }
                 }
             });
+
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
             pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
             pdf.save(`Hypertensify_Report_${formData.age || 'Patient'}.pdf`);
         } catch (error) {
             console.error("PDF Export Failed:", error);
+            alert("Export Error: Please use Google Chrome for best results.");
         } finally {
             setLoading(false);
         }
     };
 
-    // Helper component for Tooltip Input Info
     const InputInfo = ({ title, desc }) => (
         <div className="group relative inline-block ml-1.5 cursor-help align-middle">
             <HelpCircle size={13} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
@@ -149,10 +174,9 @@ const Predict = () => {
         <div className="py-8 md:py-12 px-4 md:px-6 bg-slate-50 min-h-screen font-sans text-slate-900">
             <div className="max-w-4xl mx-auto space-y-12">
 
-                {/* --- STEP 1: FORM --- */}
                 <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <div className="flex items-center gap-4 mb-2">
-                        <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg">
+                        <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-[#2563eb33]">
                             <Activity size={24} />
                         </div>
                         <div>
@@ -204,19 +228,19 @@ const Predict = () => {
                                         <option value="No">No</option>
                                     </select>
                                 </div>
-                                <div className="space-y-2 text-red-600">
-                                    <label className="text-xs font-black uppercase tracking-widest ml-1">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest ml-1 text-red-500/80">
                                         Systole (mmHg)
                                         <InputInfo title="Systole" desc="The upper number. Pressure when heart beats. Normal: <120." />
                                     </label>
-                                    <input type="number" name="systole" placeholder="120" required onChange={handleInputChange} className="w-full p-4 bg-red-50/30 border border-red-100 rounded-2xl outline-none font-bold text-red-700" />
+                                    <input type="number" name="systole" placeholder="120" required onChange={handleInputChange} className="w-full p-4 bg-red-50/20 border border-red-100 rounded-2xl outline-none font-bold text-red-700" />
                                 </div>
-                                <div className="space-y-2 text-red-600">
-                                    <label className="text-xs font-black uppercase tracking-widest ml-1">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest ml-1 text-red-500/80">
                                         Diastole (mmHg)
                                         <InputInfo title="Diastole" desc="The lower number. Pressure when heart rests. Normal: <80." />
                                     </label>
-                                    <input type="number" name="diastole" placeholder="80" required onChange={handleInputChange} className="w-full p-4 bg-red-50/30 border border-red-100 rounded-2xl outline-none font-bold text-red-700" />
+                                    <input type="number" name="diastole" placeholder="80" required onChange={handleInputChange} className="w-full p-4 bg-red-50/20 border border-red-100 rounded-2xl outline-none font-bold text-red-700" />
                                 </div>
                             </div>
 
@@ -227,7 +251,6 @@ const Predict = () => {
                     </div>
                 </section>
 
-                {/* --- STEP 2: RESULT --- */}
                 <div id="result-section" className={`space-y-6 transition-all duration-1000 ${result ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 h-0 overflow-hidden'}`}>
                     <div className="flex items-center gap-4 mb-2">
                         <div className="p-3 bg-emerald-500 rounded-2xl text-white shadow-lg">
