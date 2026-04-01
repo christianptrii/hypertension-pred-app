@@ -11,6 +11,7 @@ const Predict = () => {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [probability, setProbability] = useState(0);
+    const [displayProb, setDisplayProb] = useState(0); // State untuk animasi angka
     const [factors, setFactors] = useState([]);
     const [formData, setFormData] = useState({
         gender: '', age: '', smoking: '',
@@ -18,6 +19,29 @@ const Predict = () => {
     });
 
     const [bmi, setBmi] = useState(0);
+
+    // Animasi Angka Menghitung (Counting Up)
+    useEffect(() => {
+        if (probability > 0) {
+            let start = 0;
+            const end = parseFloat(probability);
+            const duration = 1000; // 1 detik
+            const increment = end / (duration / 16);
+
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= end) {
+                    setDisplayProb(end);
+                    clearInterval(timer);
+                } else {
+                    setDisplayProb(parseFloat(start.toFixed(1)));
+                }
+            }, 16);
+            return () => clearInterval(timer);
+        } else {
+            setDisplayProb(0);
+        }
+    }, [probability]);
 
     useEffect(() => {
         if (formData.height > 0 && formData.weight > 0) {
@@ -62,26 +86,33 @@ const Predict = () => {
             const data = await response.json();
 
             if (data.status === 'success') {
+                const rawTotal = data.factors.reduce((sum, f) => sum + f.weight, 0);
                 const translatedFactors = data.factors.map(f => {
+                    let newName = f.name;
                     const label = f.name.toUpperCase();
                     if (label.includes('TEKANAN DARAH') || label.includes('SISTOLE')) {
-                        return { ...f, name: 'Blood Pressure (Sys/Dia)' };
+                        newName = 'Blood Pressure (Sys/Dia)';
+                    } else if (label.includes('INDEKS MASSA TUBUH') || label.includes('IMT')) {
+                        newName = 'BMI Analysis';
+                    } else if (label.includes('FAKTOR USIA') || label.includes('UMUR')) {
+                        newName = 'Age Factor';
+                    } else if (label.includes('MEROKOK') || label.includes('SMOKING')) {
+                        newName = 'Smoking Status';
                     }
-                    if (label.includes('INDEKS MASSA TUBUH') || label.includes('IMT')) {
-                        return { ...f, name: 'BMI Analysis' };
-                    }
-                    if (label.includes('FAKTOR USIA') || label.includes('UMUR')) {
-                        return { ...f, name: 'Age Factor' };
-                    }
-                    if (label.includes('MEROKOK') || label.includes('SMOKING')) {
-                        return { ...f, name: 'Smoking Status' };
-                    }
-                    return f;
+                    return { ...f, name: newName, tempWeight: (f.weight / rawTotal) * 100 };
                 });
+
+                let finalFactors = translatedFactors.map(f => ({ ...f, weight: Math.round(f.tempWeight) }));
+                const currentTotal = finalFactors.reduce((sum, f) => sum + f.weight, 0);
+                if (currentTotal !== 100 && finalFactors.length > 0) {
+                    const diff = 100 - currentTotal;
+                    const topIdx = finalFactors.reduce((iMax, x, i, arr) => x.weight > arr[iMax].weight ? i : iMax, 0);
+                    finalFactors[topIdx].weight += diff;
+                }
 
                 setResult(data.result);
                 setProbability(data.probability);
-                setFactors(translatedFactors);
+                setFactors(finalFactors);
 
                 setTimeout(() => {
                     document.getElementById('result-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -95,65 +126,43 @@ const Predict = () => {
         }
     };
 
-    // --- LOGIKA PDF TERUPDATE (STRATEGI ANTI-OKLAB) ---
     const downloadPDF = async () => {
         const element = reportRef.current;
         if (!element) return;
         setLoading(true);
-
         try {
             await new Promise(resolve => setTimeout(resolve, 500));
-
             const canvas = await html2canvas(element, {
                 scale: 2,
                 backgroundColor: '#0f172a',
                 useCORS: true,
                 allowTaint: true,
-                logging: false,
                 onclone: (clonedDoc) => {
                     const el = clonedDoc.getElementById('result-card');
                     if (el) {
-                        // 1. Force main container styles
                         el.style.backgroundColor = '#0f172a';
                         el.style.color = '#ffffff';
-
-                        // 2. Brutal cleaning: ganti semua warna dinamis ke HEX statis
                         const allElements = el.getElementsByTagName("*");
                         for (let i = 0; i < allElements.length; i++) {
                             const node = allElements[i];
                             const computed = window.getComputedStyle(node);
-
-                            // Deteksi warna oklab/oklch yang bikin crash
-                            if (computed.color.includes('okl')) {
-                                node.style.color = '#ffffff';
-                            }
+                            if (computed.color.includes('okl')) node.style.color = '#ffffff';
                             if (computed.backgroundColor.includes('okl')) {
-                                // Jika ini bar progres, gunakan warna biru hex
-                                if (node.className.includes('h-full')) {
-                                    node.style.backgroundColor = '#3b82f6';
-                                } else {
-                                    node.style.backgroundColor = 'transparent';
-                                }
+                                node.style.backgroundColor = node.className.includes('h-full') ? '#3b82f6' : 'transparent';
                             }
-                            // Bersihkan border juga jika ada
-                            if (computed.borderColor.includes('okl')) {
-                                node.style.borderColor = '#1e293b';
-                            }
+                            if (computed.borderColor.includes('okl')) node.style.borderColor = '#1e293b';
                         }
                     }
                 }
             });
-
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
             pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
             pdf.save(`Hypertensify_Report_${formData.age || 'Patient'}.pdf`);
         } catch (error) {
             console.error("PDF Export Failed:", error);
-            alert("Export Error: Please use Google Chrome for best results.");
         } finally {
             setLoading(false);
         }
@@ -172,8 +181,18 @@ const Predict = () => {
 
     return (
         <div className="py-8 md:py-12 px-4 md:px-6 bg-slate-50 min-h-screen font-sans text-slate-900">
-            <div className="max-w-4xl mx-auto space-y-12">
+            {/* Animasi Internal CSS */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @keyframes heart-pulse {
+                    0% { filter: drop-shadow(0 0 0px rgba(239, 68, 68, 0)); }
+                    50% { filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.6)); }
+                    100% { filter: drop-shadow(0 0 0px rgba(239, 68, 68, 0)); }
+                }
+                .pulse-red { animation: heart-pulse 2s infinite ease-in-out; }
+            `}} />
 
+            <div className="max-w-4xl mx-auto space-y-12">
                 <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <div className="flex items-center gap-4 mb-2">
                         <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-[#2563eb33]">
@@ -269,7 +288,7 @@ const Predict = () => {
                                 <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 relative z-10">
 
                                     <div className="relative flex items-center justify-center w-40 h-40 md:w-48 md:h-48 flex-shrink-0 mx-auto">
-                                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 192 192">
+                                        <svg className={`w-full h-full transform -rotate-90 ${probability > 70 ? 'pulse-red' : ''}`} viewBox="0 0 192 192">
                                             <circle cx="96" cy="96" r="85" stroke="#1e293b" strokeWidth="14" fill="transparent" />
                                             <circle cx="96" cy="96" r="85"
                                                 stroke={probability > 50 ? '#ef4444' : '#10b981'}
@@ -281,8 +300,8 @@ const Predict = () => {
                                             />
                                         </svg>
                                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
-                                            <span className="font-black italic text-white whitespace-nowrap leading-none tracking-tighter" style={{ fontSize: probability >= 100 ? '2.4rem' : '2.8rem' }}>
-                                                {probability}%
+                                            <span className="font-black italic text-white whitespace-nowrap leading-none tracking-tighter" style={{ fontSize: displayProb >= 100 ? '2.4rem' : '2.8rem' }}>
+                                                {displayProb}%
                                             </span>
                                             <span style={{ color: '#64748b' }} className="text-[10px] font-bold uppercase tracking-widest mt-2">Risk Prob</span>
                                         </div>
