@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Menu, X, ChevronRight } from 'lucide-react'
 import Home from './pages/Home'
+import About from './pages/About'
 import Predict from './pages/Predict'
 import HealthTips from './pages/HealthTips'
 
@@ -22,6 +23,15 @@ function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
     setIsMenuOpen(false);
+
+    // Set Title Bar Dinamis
+    const titles = {
+      home: "Hypertensify | AI Health Companion",
+      about: "About Science | Hypertensify",
+      predict: "Screening Tool | Hypertensify",
+      tips: "Health Tips | Hypertensify"
+    };
+    document.title = titles[currentPage] || "Hypertensify";
   }, [currentPage]);
 
   // 3. Kunci scroll body agar tidak berantakan saat menu mobile terbuka
@@ -50,7 +60,7 @@ function App() {
       `}>
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex justify-between items-center relative">
 
-          {/* LOGO - z-[130] agar selalu di atas overlay putih */}
+          {/* LOGO */}
           <div
             className="text-xl md:text-2xl font-black text-blue-600 cursor-pointer tracking-tighter z-[130]"
             onClick={() => setCurrentPage('home')}
@@ -61,6 +71,7 @@ function App() {
           {/* DESKTOP MENU */}
           <div className="hidden md:flex space-x-10 text-[11px]">
             <button onClick={() => setCurrentPage('home')} className={navLinkClass('home')}>Home</button>
+            <button onClick={() => setCurrentPage('about')} className={navLinkClass('about')}>About</button>
             <button onClick={() => setCurrentPage('predict')} className={navLinkClass('predict')}>Screening Tool</button>
             <button onClick={() => setCurrentPage('tips')} className={navLinkClass('tips')}>Health Tips</button>
           </div>
@@ -75,7 +86,7 @@ function App() {
             </button>
           </div>
 
-          {/* MOBILE HAMBURGER BUTTON - z-[130] */}
+          {/* MOBILE HAMBURGER BUTTON */}
           <button
             className="md:hidden p-2 z-[130] text-slate-600 transition-transform active:scale-90 focus:outline-none"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -84,12 +95,11 @@ function App() {
           </button>
         </div>
 
-        {/* --- MOBILE OVERLAY MENU (SUPER SOLID WHITE) --- */}
+        {/* --- MOBILE OVERLAY MENU --- */}
         <div className={`
           fixed inset-0 !bg-white z-[120] flex flex-col transition-all duration-500 ease-in-out md:hidden
           ${isMenuOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}
         `}>
-          {/* Spacer putih agar tidak transparan di area logo */}
           <div className="h-20 !bg-white w-full shrink-0"></div>
 
           <div className="flex flex-col items-center justify-center flex-grow space-y-12 px-8 pb-32 !bg-white">
@@ -99,6 +109,12 @@ function App() {
                 className={`text-4xl font-black tracking-tighter transition-all ${currentPage === 'home' ? 'text-blue-600' : 'text-slate-200 hover:text-slate-400'}`}
               >
                 Home
+              </button>
+              <button
+                onClick={() => setCurrentPage('about')}
+                className={`text-4xl font-black tracking-tighter transition-all ${currentPage === 'about' ? 'text-blue-600' : 'text-slate-200 hover:text-slate-400'}`}
+              >
+                About
               </button>
               <button
                 onClick={() => setCurrentPage('predict')}
@@ -130,6 +146,11 @@ function App() {
           <Home onStart={() => setCurrentPage('predict')} />
         )}
 
+        {/* FIXED: Added onStart prop to About page to enable "Start Screening" button navigation */}
+        {currentPage === 'about' && (
+          <About onStart={() => setCurrentPage('predict')} />
+        )}
+
         {currentPage === 'predict' && (
           <Predict />
         )}
@@ -155,6 +176,7 @@ function App() {
             <h4 className="font-bold mb-6 text-xs uppercase tracking-[0.2em] text-slate-600">Explore</h4>
             <ul className="text-slate-400 space-y-4 font-medium">
               <li className="hover:text-blue-400 cursor-pointer transition-colors" onClick={() => setCurrentPage('home')}>Home</li>
+              <li className="hover:text-blue-400 cursor-pointer transition-colors" onClick={() => setCurrentPage('about')}>About</li>
               <li className="hover:text-blue-400 cursor-pointer transition-colors" onClick={() => setCurrentPage('predict')}>Start Screening</li>
               <li className="hover:text-blue-400 cursor-pointer transition-colors" onClick={() => setCurrentPage('tips')}>Health Advice</li>
             </ul>
@@ -169,7 +191,7 @@ function App() {
         </div>
 
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-slate-600 text-[9px] md:text-[10px] tracking-[0.3em] font-black space-y-6 md:space-y-0 text-center">
-          <p uppercase>© 2026 HYPERTENSIFY • OPEN SOURCE INITIATIVE</p>
+          <p className="uppercase">© 2026 HYPERTENSIFY • OPEN SOURCE INITIATIVE</p>
           <div className="flex gap-6 italic text-slate-400 opacity-60 uppercase font-bold">
             <span>React</span>
             <span>Tailwind</span>
