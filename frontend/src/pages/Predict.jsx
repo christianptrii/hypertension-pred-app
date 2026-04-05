@@ -247,19 +247,22 @@ const Predict = () => {
                                         <option value="No">No</option>
                                     </select>
                                 </div>
+                                {/* Systole with Info Logo */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest ml-1 text-red-500/80">
-                                        Systole (mmHg)
-                                        <InputInfo title="Systole" desc="The upper number. Pressure when heart beats. Normal: <120." />
+                                    <label className="text-xs font-black uppercase tracking-widest ml-1 text-red-500/80 flex items-center gap-1.5">
+                                        Systole (mmHg) <Info size={14} className="text-slate-400" />
                                     </label>
-                                    <input type="number" name="systole" placeholder="120" required onChange={handleInputChange} className="w-full p-4 bg-red-50/20 border border-red-100 rounded-2xl outline-none font-bold text-red-700" />
+                                    <input type="number" name="systole" placeholder="120" required onChange={handleInputChange} className="w-full p-4 bg-red-50/20 border border-red-100 rounded-2xl outline-none font-bold text-red-700 focus:ring-2 focus:ring-red-500" />
+                                    <p className="text-[10px] text-slate-400 font-bold ml-1 leading-tight uppercase">Upper number. Pressure when heart beats. Normal: &lt;120.</p>
                                 </div>
+
+                                {/* Diastole with Info Logo */}
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest ml-1 text-red-500/80">
-                                        Diastole (mmHg)
-                                        <InputInfo title="Diastole" desc="The lower number. Pressure when heart rests. Normal: <80." />
+                                    <label className="text-xs font-black uppercase tracking-widest ml-1 text-red-500/80 flex items-center gap-1.5">
+                                        Diastole (mmHg) <Info size={14} className="text-slate-400" />
                                     </label>
-                                    <input type="number" name="diastole" placeholder="80" required onChange={handleInputChange} className="w-full p-4 bg-red-50/20 border border-red-100 rounded-2xl outline-none font-bold text-red-700" />
+                                    <input type="number" name="diastole" placeholder="80" required onChange={handleInputChange} className="w-full p-4 bg-red-50/20 border border-red-100 rounded-2xl outline-none font-bold text-red-700 focus:ring-2 focus:ring-red-500" />
+                                    <p className="text-[10px] text-slate-400 font-bold ml-1 leading-tight uppercase">Lower number. Pressure when heart rests. Normal: &lt;80.</p>
                                 </div>
                             </div>
 
