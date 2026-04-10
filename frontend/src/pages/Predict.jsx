@@ -251,14 +251,14 @@ const Predict = () => {
                                         Systole (mmHg) <Info size={18} className="text-slate-400" />
                                     </label>
                                     <input type="number" name="systole" placeholder="120" required onChange={handleInputChange} className="w-full p-5 bg-red-50/20 border border-red-100 rounded-2xl outline-none font-bold text-xl md:text-2xl text-red-700 focus:ring-2 focus:ring-red-500" />
-                                    <p className="text-[11px] md:text-[13px] text-slate-400 font-bold ml-1 leading-tight uppercase">Upper number. Normal: &lt;120.</p>
+                                    <p className="text-[11px] md:text-[13px] text-slate-400 font-bold ml-1 leading-tight uppercase">Upper number. Pressure when heart beats. Normal: &lt;120.</p>
                                 </div>
                                 <div className="space-y-3">
                                     <label className="text-sm md:text-base font-black uppercase tracking-widest ml-1 text-red-500/80 flex items-center gap-1.5">
                                         Diastole (mmHg) <Info size={18} className="text-slate-400" />
                                     </label>
                                     <input type="number" name="diastole" placeholder="80" required onChange={handleInputChange} className="w-full p-5 bg-red-50/20 border border-red-100 rounded-2xl outline-none font-bold text-xl md:text-2xl text-red-700 focus:ring-2 focus:ring-red-500" />
-                                    <p className="text-[11px] md:text-[13px] text-slate-400 font-bold ml-1 leading-tight uppercase">Lower number. Normal: &lt;80.</p>
+                                    <p className="text-[11px] md:text-[13px] text-slate-400 font-bold ml-1 leading-tight uppercase">Lower number. Pressure when heart rests. Normal: &lt;80.</p>
                                 </div>
                             </div>
 
