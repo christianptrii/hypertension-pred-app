@@ -34,7 +34,19 @@ const About = ({ onStart }) => {
                     <TrustCard
                         icon={<BookOpen className="text-indigo-500" size={32} />}
                         title="Superior Accuracy"
-                        desc="Random Forest is scientifically proven to achieve superior accuracy, reaching up to 98.4% compared to traditional models."
+                        desc={
+                            <>
+                                Random Forest is scientifically proven to achieve superior accuracy, reaching up to 98.4% compared to traditional models.
+                                <a
+                                    href="https://doi.org/10.1016/j.glmedi.2023.100026"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ml-1 text-blue-500 hover:text-blue-700 font-bold underline underline-offset-4 transition-all"
+                                >
+                                    [See Scientific Evidence]
+                                </a>
+                            </>
+                        }
                     />
                     <TrustCard
                         icon={<BrainCircuit className="text-emerald-500" size={32} />}
