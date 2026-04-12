@@ -15,7 +15,6 @@ const About = ({ onStart }) => {
                         <FileText size={16} className="animate-pulse" />
                         <span className="uppercase">Scientific Background</span>
                     </div>
-                    {/* Judul diubah menjadi lebih bersahabat */}
                     <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-tight">
                         Get to Know <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Hypertensify.</span>
