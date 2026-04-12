@@ -15,12 +15,13 @@ const About = ({ onStart }) => {
                         <FileText size={16} className="animate-pulse" />
                         <span className="uppercase">Scientific Background</span>
                     </div>
+                    {/* Judul diubah menjadi lebih bersahabat */}
                     <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-tight">
-                        Rooted in Literature. <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Engineered for Accuracy.</span>
+                        Get to Know <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Hypertensify.</span>
                     </h1>
                     <p className="text-xl md:text-2xl text-slate-500 max-w-3xl mx-auto font-medium leading-relaxed">
-                        Hypertensify is a Clinical Decision Support System built upon peer-reviewed scientific journals and established Machine Learning methodologies for early hypertension risk detection.
+                        Hypertensify is a web-based early screening tool built upon peer-reviewed scientific journals and established Machine Learning methodologies to identify hypertension risks at an early stage.
                     </p>
                 </section>
 
