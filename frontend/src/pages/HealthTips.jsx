@@ -24,7 +24,7 @@ const HealthTips = () => {
         {
             icon: <Wind className="text-teal-500" size={32} />,
             title: "Manage Stress",
-            desc: "Practice mindfulness, deep breathing, or yoga to keep your stress levels—and blood pressure—in check.",
+            desc: "Practice mindfulness, deep breathing, or yoga to keep your stress levels and blood pressure in check.",
             color: "bg-teal-50"
         },
         {

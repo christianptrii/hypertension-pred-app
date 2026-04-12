@@ -36,25 +36,22 @@ const Home = ({ onStart }) => {
                     {/* Konten Teks */}
                     <div className="text-center lg:text-left relative z-20">
                         <div className="flex justify-center lg:justify-start mb-6 md:mb-8">
-                            {/* Font badge disamakan dengan About: text-[13px] */}
                             <div className="inline-flex items-center gap-2 px-5 py-2.5 text-[13px] font-bold tracking-[0.2em] text-blue-600 uppercase bg-blue-50/50 backdrop-blur-sm border border-blue-100 rounded-2xl animate-fade-in whitespace-normal text-center leading-tight">
                                 <Sparkles size={16} className="animate-pulse shrink-0" />
                                 <span>AI Health Companion</span>
                             </div>
                         </div>
 
-                        {/* Heading diperbesar sedikit menyesuaikan proporsi About */}
                         <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 mb-6 md:mb-10 leading-[1.1] md:leading-[0.95] tracking-tight">
                             Your Heart <br className="hidden md:block" />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Deserves</span> <br className="hidden md:block" />
                             to be Heard.
                         </h1>
 
-                        {/* Deskripsi diperbesar ke text-xl/2xl seperti About */}
                         <p className="text-xl md:text-2xl text-slate-500 mb-8 md:mb-14 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
                             Take control of your heart health with AI. Our system uses advanced
                             <span className="text-blue-600 font-bold"> Random Forest and PSO </span>
-                            to transform your clinical data into instant, private, and accurate hypertension risk insights.
+                            to transform your clinical data into instant and private <span className="text-blue-600 font-bold"> hypertension risk probability insights.</span>
                         </p>
 
                         <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 md:gap-5">
@@ -106,10 +103,10 @@ const Home = ({ onStart }) => {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* --- CORE VALUES --- */}
-            <section className="py-16 md:py-32 px-6">
+            < section className="py-16 md:py-32 px-6" >
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                     <AestheticCard
                         icon={<Clock className="text-blue-600" />}
@@ -130,10 +127,10 @@ const Home = ({ onStart }) => {
                         bgColor="bg-indigo-50"
                     />
                 </div>
-            </section>
+            </section >
 
             {/* --- ATTRACTIVE ABOUT --- */}
-            <section id="about" className="py-16 md:py-32 px-6 bg-slate-50/50">
+            < section id="about" className="py-16 md:py-32 px-6 bg-slate-50/50" >
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
                     <div className="relative order-2 lg:order-1 flex justify-center lg:block">
                         <div className="w-full max-w-[300px] md:max-w-full aspect-square bg-white rounded-[40px] md:rounded-[60px] shadow-2xl overflow-hidden p-8 flex items-center justify-center relative">
@@ -153,16 +150,16 @@ const Home = ({ onStart }) => {
                             Hypertension is a global health challenge often referred to as the "silent killer." Our platform empowers you with AI-driven insights to help you navigate your health journey.
                         </p>
                         <ul className="space-y-5 md:space-y-8 text-left inline-block lg:block">
-                            <ListItem text="Prevent chronic heart complications" />
-                            <ListItem text="Monitor blood pressure trends easily" />
-                            <ListItem text="Bridge the gap between you and your doctor" />
+                            <ListItem text="Identify potential heart health risks early" />
+                            <ListItem text="Understand your clinical risk factors better" />
+                            <ListItem text="Gain valuable data insights to discuss with healthcare providers" />
                         </ul>
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* --- FAQ --- */}
-            <section className="py-16 md:py-32 px-6">
+            < section className="py-16 md:py-32 px-6" >
                 <div className="max-w-3xl mx-auto">
                     <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-10 md:mb-20 text-center tracking-tight">Understanding Screening</h2>
                     <div className="space-y-6 md:space-y-10">
@@ -185,10 +182,10 @@ const Home = ({ onStart }) => {
                         ))}
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* --- CTA --- */}
-            <section className="py-12 md:py-32 px-6 text-center">
+            < section className="py-12 md:py-32 px-6 text-center" >
                 <div className="max-w-7xl mx-auto bg-gradient-to-r from-slate-900 to-slate-800 rounded-[30px] md:rounded-[60px] p-10 md:p-24 relative overflow-hidden shadow-3xl">
                     <div className="absolute top-0 right-0 w-48 md:w-96 h-48 md:h-96 bg-blue-500/10 rounded-full blur-[60px] md:blur-[100px]"></div>
                     <h2 className="text-4xl md:text-7xl font-black text-white mb-6 md:mb-10 tracking-tighter">Your Health Path Starts Here.</h2>
@@ -202,8 +199,8 @@ const Home = ({ onStart }) => {
                         START PREDICTION NOW
                     </button>
                 </div>
-            </section>
-        </div>
+            </section >
+        </div >
     );
 };
 

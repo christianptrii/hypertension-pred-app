@@ -63,7 +63,7 @@ const About = ({ onStart }) => {
                                 <FlaskConical className="text-blue-400 mb-6" size={48} />
                                 <h3 className="text-white font-bold text-2xl mb-4">PSO-RF Synergy</h3>
                                 <p className="text-slate-400 text-base md:text-lg leading-relaxed italic">
-                                    "The integration of PSO into Random Forest automatically explores the parameter space to find the best configuration, minimizing human subjectivity."
+                                    "The integration of PSO into Random Forest optimizes the screening process by providing objective data insights to better support medical professionals in early risk detection."
                                 </p>
                                 <div className="absolute -bottom-4 -right-4 text-blue-500/10 transform rotate-12">
                                     <BookOpen size={140} />
