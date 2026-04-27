@@ -90,13 +90,13 @@ const Predict = () => {
                     let newName = f.name;
                     const label = f.name.toUpperCase();
                     if (label.includes('TEKANAN DARAH') || label.includes('SISTOLE')) {
-                        newName = 'Blood Pressure (Sys/Dia)';
+                        newName = 'Blood Pressure';
                     } else if (label.includes('INDEKS MASSA TUBUH') || label.includes('IMT')) {
-                        newName = 'BMI Analysis';
+                        newName = 'Body Weight (BMI)';
                     } else if (label.includes('FAKTOR USIA') || label.includes('UMUR')) {
-                        newName = 'Age Factor';
+                        newName = 'Age Group';
                     } else if (label.includes('MEROKOK') || label.includes('SMOKING')) {
-                        newName = 'Smoking Status';
+                        newName = 'Smoking Habit';
                     }
                     return { ...f, name: newName, tempWeight: (f.weight / rawTotal) * 100 };
                 });
@@ -304,16 +304,22 @@ const Predict = () => {
                                         <span className="font-black italic text-white whitespace-nowrap leading-none tracking-tighter" style={{ fontSize: displayProb >= 100 ? '2.8rem' : '3.4rem' }}>
                                             {displayProb}%
                                         </span>
-                                        <span style={{ color: '#64748b' }} className="text-xs md:text-sm font-bold uppercase tracking-widest mt-2">Risk Prob</span>
+                                        {/* Perubahan Ukuran dan Warna Dinamis pada Risk Prob */}
+                                        <span
+                                            style={{ color: probability > 50 ? '#ef4444' : '#10b981' }}
+                                            className="text-sm md:text-lg font-black uppercase tracking-widest mt-2"
+                                        >
+                                            Risk Prob
+                                        </span>
                                     </div>
                                 </div>
 
                                 {/* Analisis Teks & Bar Faktor */}
                                 <div className="flex-grow w-full space-y-8">
                                     <div className="space-y-4">
-                                        <h3 style={{ color: '#60a5fa' }} className="text-base md:text-lg font-black uppercase tracking-[0.2em]">Key Insights</h3>
+                                        <h3 style={{ color: '#60a5fa' }} className="text-base md:text-lg font-black uppercase tracking-[0.2em]">Medical Insight</h3>
                                         <p className="text-slate-400 text-base md:text-xl font-medium leading-relaxed">
-                                            Based on the Random Forest algorithm optimized with PSO, <span className="text-white font-bold">{getDynamicInsight()}</span>
+                                            Our AI analysis shows that <span className="text-white font-bold">{getDynamicInsight()}</span>
                                         </p>
                                     </div>
                                     <div className="space-y-5">
@@ -321,7 +327,8 @@ const Predict = () => {
                                             <div key={i} className="space-y-2.5">
                                                 <div className="flex justify-between text-xs md:text-base font-black uppercase tracking-tight">
                                                     <span style={{ color: '#94a3b8' }}>{f.name}</span>
-                                                    <span style={{ color: '#60a5fa' }}>{f.weight}% Influence</span>
+                                                    {/* Bahasa Awam: Influence -> Impact */}
+                                                    <span style={{ color: '#60a5fa' }}>{f.weight}% Impact</span>
                                                 </div>
                                                 <div style={{ backgroundColor: '#1e293b' }} className="h-2 md:h-3 rounded-full overflow-hidden">
                                                     <div style={{ width: `${f.weight}%`, backgroundColor: '#3b82f6' }} className="h-full rounded-full transition-all duration-1000"></div>
